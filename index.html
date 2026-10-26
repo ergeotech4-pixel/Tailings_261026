@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <title>Хаягдлын далангийн геотехникийн төлөвлөгөөт үзлэг, шалгалт — 2026.10.26</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      background: #f4f6f8;
+    }
+    .wrapper {
+      width: 1000px;
+      background: #fff;
+      border: 3px solid #003366;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      margin-top: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, #e6f0ff, #f7fbff);
+      border-bottom: 4px solid #003366;
+      padding: 6px 18px;
+      border-radius: 6px 6px 0 0;
+    }
+    header img { height: 35px; }
+    header h1 {
+      font-size: 20px;
+      color: #003366;
+      text-align: center;
+      flex-grow: 1;
+      margin: 0 10px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .container { position: relative; display: inline-block; width: 100%; }
+    .base { width: 100%; border-top: 3px solid #003366; }
+
+    .hotspot {
+      position: absolute;
+      width: 60px; height: 60px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .popup {
+      position: absolute; left: 0; top: 10px;
+      width: 100%;
+      background: #fff;
+      padding: 10px;
+      border: 3px solid red;
+      box-shadow: 2px 2px 5px #aaa;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(30px);
+      transition: opacity .4s ease, transform .4s ease;
+    }
+    .popup.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+    .popup h3 {
+      font-size: 20px;
+      background: orange;
+      color: #000;
+      margin: -10px -10px 10px -10px;
+      padding: 6px 10px;  
+}
+    .close {
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      color: #000;
+      cursor: pointer;
+    }
+
+    /* 🟦 Тэмдэглэл */
+    .note-section {
+      background: #e8f3ff;
+      border: 1px solid #bcd6f7;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* 🟨 Зөвлөмж */
+    .recommend {
+      background: #fff9e6;
+      border: 1px solid #f0d878;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .recommend ul { margin: 0; padding-left: 18px; }
+
+    .section-title { color: #003366; font-weight: bold; border-bottom: 1px solid #ccc; margin: 8px 0 6px; }
+    .ok { color: green; font-weight: bold; }
+    .notok { color: red; font-weight: bold; }
+
+    .cols { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+    .colL { flex: 1 1 38%; min-width: 300px; display: flex; justify-content: center; position: relative; }
+    .colR { flex: 1 1 60%; min-width: 420px; }
+
+    .colL img { width: 100%; border: 1px solid #ccc; border-radius: 6px; object-fit: contain; }
+
+    /* Marker */
+    .marker {
+      position: absolute;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      border: 2px solid #003366;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #003366;
+      transition: 0.3s;
+    }
+    .marker.active {
+      background: red;
+      color: white;
+      border-color: darkred;
+      transform: scale(1.2);
+    }
+
+    .slides { position: relative; width: 100%; height: 360px; margin-top: 8px; }
+    .slide { display: none; }
+    .slide img {
+      width: 100%; height: 360px; object-fit: cover;
+      border: 1px solid #ccc; border-radius: 6px;
+    }
+    .nav {
+      position: absolute; top: 50%; transform: translateY(-50%);font-size: 36px;
+      padding: 10px 10px; background: rgba(0,0,0,.5); color: #fff;
+      font-weight: bold; cursor: pointer; user-select: none; border-radius: 3px;
+    }
+    .nav.prev { left: 0; } .nav.next { right: 0; }
+    .nav:hover { background: rgba(0,0,0,.8); }
+  </style>
+
+  <script>
+    function openPopup(id) {
+      document.querySelectorAll('.popup').forEach(p => p.classList.remove('show'));
+      document.getElementById(id).classList.add('show');
+      initSlides(id);
+    }
+    function closePopup(id) { document.getElementById(id).classList.remove('show'); }
+
+    const slideIndex = {};
+    function initSlides(popupId) {
+      const groups = new Set();
+      document.querySelectorAll(`#${popupId} .slide`).forEach(s => {
+        s.style.display = 'none';
+        s.classList.forEach(c => { if (c.startsWith('r')) groups.add(c); });
+      });
+      groups.forEach(g => {
+        slideIndex[g] = 1;
+        const gSlides = document.querySelectorAll(`#${popupId} .slide.${g}`);
+        if (gSlides.length) gSlides[0].style.display = 'block';
+      });
+      updateMarkers(popupId, 1);
+    }
+    function plusSlides(n, group, popupId) {
+      const gSlides = document.querySelectorAll(`#${popupId} .slide.${group}`);
+      if (!gSlides.length) return;
+      if (!slideIndex[group]) slideIndex[group] = 1;
+      slideIndex[group] += n;
+      if (slideIndex[group] > gSlides.length) slideIndex[group] = 1;
+      if (slideIndex[group] < 1) slideIndex[group] = gSlides.length;
+      gSlides.forEach(s => s.style.display = 'none');
+      gSlides[slideIndex[group]-1].style.display = 'block';
+      updateMarkers(popupId, slideIndex[group]);
+    }
+    function updateMarkers(popupId, index){
+      document.querySelectorAll(`#${popupId} .marker`).forEach((m,i)=>{
+        m.classList.toggle('active', i+1===index);
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <img src="logo.png" alt="Company Logo">
+      <h1>Хаягдлын далангийн геотехникийн төлөвлөгөөт үзлэг, шалгалт — 2026.10.26</h1>
+    </header>
+
+    <div class="container">
+      <img src="plan.JPG" alt="Base plan" class="base">
+<!-- 🟨 Хяналтын хуудасны hotspot -->
+<div class="hotspot" 
+     style="top:700px; left:1px; width:300px; height:30px; 
+            background:rgba(0,51,102,0.9); color:#fff; 
+            display:flex; align-items:center; justify-content:center; 
+            border-radius:8px; font-weight:bold; font-size:15px;
+            box-shadow:0 0 6px rgba(0,0,0,0.3); cursor:pointer;"
+     onclick="openPopup('popupChecklist')">
+  📋 Хяналтын хуудас
+</div>
+
+<!-- 🟩 Хяналтын хуудасны popup -->
+<div id="popupChecklist" class="popup" style="width:55%; left:22%; top:10px; border-color:#003366;">
+  <span class="close" onclick="closePopup('popupChecklist')">[x]</span>
+  <h3>Хяналтын хуудас</h3>
+  <div style="display:flex; justify-content:center; align-items:center; padding:10px;">
+    <img src="list.jpg"
+         style="max-width:100%; height:auto; border:2px solid #003366; border-radius:8px;">
+  </div>
+</div>
+
+      <!-- Grid marker hotspot (approx layout) -->
+      <div class="hotspot" style="left:470px; top:380px;" onclick="openPopup('popup1')"></div>
+
+      <!-- ============ Popup Template (1) ============ -->
+      <!-- Popup 1 -->
+      <div id="popup1" class="popup">
+        <span class="close" onclick="closePopup('popup1')">[x]</span>
+        <h3>Маршрут </h3>
+        <div class="cols">
+          <div class="colL">
+            <img src="M1.jpg">
+            <div class="marker" style="left:11.6%; top:30%;">1</div>
+            <div class="marker" style="left:60%; top:50%;">2</div>
+            <div class="marker" style="left:80%; top:18%;">3</div>
+            <div class="marker" style="left:35%; top:05%;">4</div>
+          </div>
+          <div class="colR">
+            <div class="note-section">
+              <div class="section-title">Тэмдэглэл</div>
+              <p class="ok">✅ Шинэ цууралт, тэлэлт ажиглагдаагүй</p>
+              <p class="ok">✅ Гадаргын усны нөлөөгүй, шүүрэлт ажиглагдаагүй</p>
+              <p class="ok">✅ Тогтворжилт хэвийн, хэв гажилд өртөөгүй.</p>
+            </div>
+            <div class="recommend">
+              <div class="section-title">Зөвлөмж</div>
+<ul>
+  <li>Төлөвлөгөөт үзлэгийг хэвийн үргэлжлүүлэх.</li>
+  <li>Ирмэг дагуу үүссэн цууралт болон геотехникийн аюулуудад ямар нэгэн хариу арга хэмжээг авсан тохиолдолд фото зургаар баримтжуулан мэйл-р геотехникийн инженерт мэдэгдэнэ үү.</li>
+</ul>
+</div>
+            <div class="slides">
+              <div class="slide r1"><img src="1.1.jpg"></div>
+              <div class="slide r1"><img src="1.2.jpg "></div>
+              <div class="slide r1"><img src="1.3.jpg "></div>
+              <div class="slide r1"><img src="1.4.jpg "></div>
+              <div class="nav prev" onclick="plusSlides(-1,'r1','popup1')">&#10094;</div>
+              <div class="nav next" onclick="plusSlides(1,'r1','popup1')">&#10095;</div>
+            </div>
+          </div>
+        </div>
+      </div>
